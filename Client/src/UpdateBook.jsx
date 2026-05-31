@@ -10,7 +10,8 @@ const UpdateBook = () => {
         publisher: book.publisher,
         name: book.name,
         date: book.date,
-        Cost: book.Cost
+        cost: book.cost,
+        edition: book.edition || ''
     });
 
     const navigate = useNavigate();
@@ -56,13 +57,23 @@ const UpdateBook = () => {
                     />
                 </div>
                 <div className="mb-3">
-                    <label htmlFor="Cost" className="form-label">Book name:</label>
+                    <label htmlFor="cost" className="form-label">Cost:</label>
                     <input type="text"
                         className="form-control"
                         placeholder="Rupees"
-                        name="Cost"
-                        value={values.Cost}
-                        onChange={(e) => setValues({ ...values, Cost: e.target.value })}
+                        name="cost"
+                        value={values.cost}
+                        onChange={(e) => setValues({ ...values, cost: e.target.value })}
+                    />
+                </div>
+                <div className="mb-3">
+                    <label htmlFor="edition" className="form-label">Edition:</label>
+                    <input type="text"
+                        className="form-control"
+                        placeholder="Enter edition (e.g. 2nd edition)"
+                        name="edition"
+                        value={values.edition}
+                        onChange={(e) => setValues({ ...values, edition: e.target.value })}
                     />
                 </div>
                 <button type="submit" className="btn btn-primary">Update</button>

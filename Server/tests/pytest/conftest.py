@@ -1,5 +1,5 @@
 import pytest
-import psycopg2
+import sqlite3
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -36,11 +36,11 @@ def create_sample_book(db_connection):
     """
     conn, cursor = db_connection
     cursor.execute(
-        "INSERT INTO book (publisher, name, date, cost) VALUES (%s, %s, %s, %s) RETURNING id",
+        "INSERT INTO book (publisher, name, date, cost) VALUES (?, ?, ?, ?)",
         ("TestPub", "TestBook", "2025-01-01", 50.0)
     )
-    book_id = cursor.fetchone()[0]
+    book_id = cursor.lastrowid
     conn.commit()
     yield book_id
-    cursor.execute("DELETE FROM book WHERE id=%s", (book_id,))
+    cursor.execute("DELETE FROM book WHERE id=?", (book_id,))
     conn.commit()
