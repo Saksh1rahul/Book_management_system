@@ -62,7 +62,7 @@ Ensure the following are installed on your system:
    venv/bin/python3 app.py
    ```
 
-   The backend will start on **http://localhost:5001**
+   The backend will start on **http://localhost:5000**
 
    The `books.db` SQLite file is created automatically on first run — no manual database setup needed.
 
@@ -90,7 +90,7 @@ Ensure the following are installed on your system:
 
 ## Usage
 
-1. Start the backend server (Flask on port **5001**)
+1. Start the backend server (Flask on port **5000**)
 2. Start the frontend client (React on port **5173**)
 3. Open your browser and navigate to **http://localhost:5173**
 
@@ -119,7 +119,7 @@ GET http://localhost:5001/
 
 #### Create a Book
 ```
-POST http://localhost:5001/create
+POST http://localhost:5000/create
 Content-Type: application/json
 
 {
@@ -132,7 +132,7 @@ Content-Type: application/json
 
 #### Update a Book
 ```
-PUT http://localhost:5001/update/1
+PUT http://localhost:5000/update/1
 Content-Type: application/json
 
 {
@@ -145,7 +145,7 @@ Content-Type: application/json
 
 #### Delete a Book
 ```
-DELETE http://localhost:5001/delete/1
+DELETE http://localhost:5000/delete/1
 ```
 
 ## Technologies Used
@@ -197,7 +197,7 @@ python3 Server/app.py
 ```
 
 ### Frontend can't connect to backend
-- Verify the Flask server is running on port **5001**
+- Verify the Flask server is running on port **5000**
 - Check that CORS is enabled (it is by default via `flask-cors`)
 
 ### Virtual environment issues
