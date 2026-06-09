@@ -18,7 +18,7 @@ const UpdateBook = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.put(`http://localhost:5001/update/${book.id}`, values)
+        axios.put(`http://localhost:5000/update/${book.id}`, values)
             .then(res => navigate('/'))
             .catch(err => console.log(err));
     }

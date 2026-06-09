@@ -14,7 +14,7 @@ const CreateBook = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        axios.post('http://localhost:5001/create', values)
+        axios.post('http://localhost:5000/create', values)
             .then(res => navigate('/'))
             .catch(err => {
                 console.error('Failed to create book:', err)
