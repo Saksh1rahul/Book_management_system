@@ -1,8 +1,12 @@
-import pytest
+import os
 import sqlite3
 import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from pathlib import Path
+
+import pytest
+
+SERVER_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(SERVER_ROOT))
 
 from app import app as flask_app, get_db_connection
 

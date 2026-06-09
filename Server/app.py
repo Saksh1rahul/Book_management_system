@@ -143,7 +143,7 @@ def login():
     password = data.get('password') or ''
 
     if not username or not password:
-        return jsonify({'error': 'Username and password are required'}), 400
+        return jsonify({'error': 'username and password are required'}), 400
 
     connection = get_db_connection()
     cursor = connection.cursor()
