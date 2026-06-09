@@ -36,8 +36,8 @@ def create_sample_book(db_connection):
     """
     conn, cursor = db_connection
     cursor.execute(
-        "INSERT INTO book (publisher, name, date, cost) VALUES (?, ?, ?, ?)",
-        ("TestPub", "TestBook", "2025-01-01", 50.0)
+        "INSERT INTO book (publisher, name, date, cost, edition) VALUES (?, ?, ?, ?, ?)",
+        ("TestPub", "TestBook", "2025-01-01", 50.0, "1st")
     )
     book_id = cursor.lastrowid
     conn.commit()

@@ -1,6 +1,7 @@
-import axios from 'axios'
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import axios from 'axios';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getAuthHeaders } from './auth';
 
 const CreateBook = () => {
     const [values, setValues] = useState({
@@ -9,23 +10,27 @@ const CreateBook = () => {
         date: '',
         cost: '',
         edition: ''
-    })
-    const navigate = useNavigate()
+    });
+    const navigate = useNavigate();
 
     const handleSubmit = (e) => {
-        e.preventDefault()
-        axios.post('http://localhost:5000/create', values)
-            .then(res => navigate('/'))
+        e.preventDefault();
+        axios.post('http://localhost:5000/create', values, { headers: getAuthHeaders() })
+            .then(() => navigate('/'))
             .catch(err => {
-                console.error('Failed to create book:', err)
-                alert('Unable to submit. Check the server is running and open the browser console for details.')
-            })
-    }
+                console.error('Failed to create book:', err);
+                if (err.response?.status === 401) {
+                    navigate('/login');
+                } else {
+                    alert('Unable to submit. Check the server is running and open the browser console for details.');
+                }
+            });
+    };
 
     return (
         <div className='d-flex align-items-center flex-column mt-3'>
             <h2>Add a Book</h2>
-            <form className='wt-50' onSubmit={handleSubmit}>
+            <form className='w-50' onSubmit={handleSubmit}>
                 <div className='mb-3 mt-3'>
                     <label htmlFor='publisher' className='form-label'>Publisher</label>
                     <input
@@ -80,11 +85,11 @@ const CreateBook = () => {
                         onChange={(e) => setValues({ ...values, edition: e.target.value })}
                     />
                 </div>
-                
+
                 <button type='submit' className='btn btn-primary'>Submit</button>
             </form>
         </div>
-    )
-}
+    );
+};
 
-export default CreateBook
+export default CreateBook;

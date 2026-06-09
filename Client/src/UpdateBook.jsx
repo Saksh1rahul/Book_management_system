@@ -1,10 +1,17 @@
 import axios from 'axios';
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getAuthHeaders } from './auth';
 
 const UpdateBook = () => {
     const location = useLocation();
-    const book = location.state.book;
+    const navigate = useNavigate();
+    const book = location.state?.book;
+
+    if (!book) {
+        navigate('/');
+        return null;
+    }
 
     const [values, setValues] = useState({
         publisher: book.publisher,
@@ -14,19 +21,22 @@ const UpdateBook = () => {
         edition: book.edition || ''
     });
 
-    const navigate = useNavigate();
-
     const handleSubmit = (e) => {
         e.preventDefault();
-        axios.put(`http://localhost:5000/update/${book.id}`, values)
-            .then(res => navigate('/'))
-            .catch(err => console.log(err));
-    }
+        axios.put(`http://localhost:5000/update/${book.id}`, values, { headers: getAuthHeaders() })
+            .then(() => navigate('/'))
+            .catch(err => {
+                console.log(err);
+                if (err.response?.status === 401) {
+                    navigate('/login');
+                }
+            });
+    };
 
     return (
         <div className='d-flex align-items-center flex-column mt-3'>
             <h2>Update Book</h2>
-            <form className='wt-50' onSubmit={handleSubmit}>
+            <form className='w-50' onSubmit={handleSubmit}>
                 <div className="mb-3 mt-3">
                     <label htmlFor="Publisher" className="form-label">Publisher</label>
                     <input type="text"
@@ -80,6 +90,6 @@ const UpdateBook = () => {
             </form>
         </div>
     );
-}
+};
 
 export default UpdateBook;

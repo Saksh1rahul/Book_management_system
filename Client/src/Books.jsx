@@ -1,8 +1,7 @@
-// Books.js
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { getAuthHeaders, isAuthenticated } from './auth';
 
 const Books = () => {
     const [books, setBooks] = useState([]);
@@ -13,15 +12,20 @@ const Books = () => {
     };
 
     const handleDelete = (bookId) => {
-        axios.delete(`http://localhost:5000/delete/${bookId}`)
+        axios.delete(`http://localhost:5000/delete/${bookId}`, { headers: getAuthHeaders() })
             .then(() => {
                 setBooks(books.filter(book => book.id !== bookId));
             })
-            .catch(err => console.log(err));
+            .catch(err => {
+                console.log(err);
+                if (err.response?.status === 401) {
+                    navigate('/login');
+                }
+            });
     };
 
     useEffect(() => {
-        axios.get('http://localhost:5000')
+        axios.get('http://localhost:5000', { headers: getAuthHeaders() })
             .then(res => {
                 if (Array.isArray(res.data)) {
                     setBooks(res.data);
@@ -33,8 +37,12 @@ const Books = () => {
     }, []);
 
     return (
-        <div className='container'>
-            <Link to='/create' className='btn btn-success'>Create Link</Link>
+        <div className='container mt-3'>
+            {isAuthenticated() ? (
+                <Link to='/create' className='btn btn-success mb-3'>Create Book</Link>
+            ) : (
+                <p className='text-muted'>Please login to create or manage books.</p>
+            )}
             {books.length !== 0 ?
                 <table className="table">
                     <thead>
@@ -56,12 +64,16 @@ const Books = () => {
                                 <td>{book.cost}</td>
                                 <td>{book.edition}</td>
                                 <td>
-                                    <button className="btn btn-primary" onClick={() => handleUpdate(book)}>
-                                        Update
-                                    </button>
-                                    <button className="btn btn-danger ms-2" onClick={() => handleDelete(book.id)}>
-                                        Delete
-                                    </button>
+                                    {isAuthenticated() ? (
+                                        <>
+                                            <button className="btn btn-primary" onClick={() => handleUpdate(book)}>
+                                                Update
+                                            </button>
+                                            <button className="btn btn-danger ms-2" onClick={() => handleDelete(book.id)}>
+                                                Delete
+                                            </button>
+                                        </>
+                                    ) : null}
                                 </td>
                             </tr>
                         )}
@@ -71,6 +83,6 @@ const Books = () => {
             }
         </div>
     );
-}
+};
 
 export default Books;

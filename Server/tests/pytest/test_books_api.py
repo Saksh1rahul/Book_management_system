@@ -1,5 +1,13 @@
 import pytest
-import json
+import uuid
+
+
+def get_auth_headers(client):
+    username = f"testuser_{uuid.uuid4().hex[:8]}"
+    client.post('/register', json={'username': username, 'password': 'secret123'})
+    login_response = client.post('/login', json={'username': username, 'password': 'secret123'})
+    token = login_response.get_json()['token']
+    return {'Authorization': f'Bearer {token}'}
 
 # ----------------------------
 # SECTION 1: Basic Functional
@@ -32,7 +40,7 @@ def test_create_valid_book(client):
         "date": "2025-01-01",
         "cost": 49.99
     }
-    response = client.post("/create", json=payload)
+    response = client.post("/create", json=payload, headers=get_auth_headers(client))
     data = response.get_json()
     assert response.status_code == 201
     assert data["data"]["name"] == "Flask101"
@@ -44,7 +52,7 @@ def test_create_missing_field(client):
         "date": "2025-01-01",
         "cost": 49.99
     }
-    response = client.post("/create", json=payload)
+    response = client.post("/create", json=payload, headers=get_auth_headers(client))
     assert response.status_code == 400
     assert "Missing field" in response.get_json()["error"]
 
@@ -56,7 +64,7 @@ def test_create_invalid_cost(client):
         "date": "2025-01-01",
         "cost": "abc"
     }
-    response = client.post("/create", json=payload)
+    response = client.post("/create", json=payload, headers=get_auth_headers(client))
     assert response.status_code == 400
     assert "Invalid cost" in response.get_json()["error"]
 
@@ -68,13 +76,13 @@ def test_create_invalid_date(client):
         "date": "32-13-2025",
         "cost": 39.99
     }
-    response = client.post("/create", json=payload)
+    response = client.post("/create", json=payload, headers=get_auth_headers(client))
     assert response.status_code == 400
     assert "Invalid date format" in response.get_json()["error"]
 
 @pytest.mark.create_api
 def test_create_empty_body(client):
-    response = client.post("/create", data="")
+    response = client.post("/create", data="", headers=get_auth_headers(client))
     assert response.status_code == 400
     assert "Request must be JSON" in response.get_json()["error"]
 
@@ -91,7 +99,7 @@ def test_update_valid_book(client, create_sample_book):
         "date": "2025-12-12",
         "cost": 60.0
     }
-    response = client.put(f"/update/{book_id}", json=payload)
+    response = client.put(f"/update/{book_id}", json=payload, headers=get_auth_headers(client))
     assert response.status_code == 200
     assert response.get_json()["data"]["name"] == "UpdatedBook"
 
@@ -103,7 +111,7 @@ def test_update_nonexistent_book(client):
         "date": "2025-01-01",
         "cost": 10
     }
-    response = client.put("/update/99999", json=payload)
+    response = client.put("/update/99999", json=payload, headers=get_auth_headers(client))
     assert response.status_code == 404
     assert "Book not found" in response.get_json()["error"]
 
@@ -114,13 +122,13 @@ def test_update_nonexistent_book(client):
 @pytest.mark.delete_api
 def test_delete_existing_book(client, create_sample_book):
     book_id = create_sample_book
-    response = client.delete(f"/delete/{book_id}")
+    response = client.delete(f"/delete/{book_id}", headers=get_auth_headers(client))
     assert response.status_code == 200
     assert "deleted successfully" in response.get_json()["message"]
 
 @pytest.mark.delete_api
 def test_delete_nonexistent_book(client):
-    response = client.delete("/delete/99999")
+    response = client.delete("/delete/99999", headers=get_auth_headers(client))
     assert response.status_code == 404
     assert "Book not found" in response.get_json()["error"]
 
