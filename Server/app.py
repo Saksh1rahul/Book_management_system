@@ -3,7 +3,6 @@ import os
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from functools import wraps
-
 import jwt
 from flask import Flask, g, jsonify, request
 from flask_cors import CORS
@@ -11,14 +10,16 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'this-is-a-very-long-dev-secret-key-for-jwt-auth-123456')
+app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', "sakshi's_project")
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'books.db')
 
 
 def get_db_connection():
-    connection = sqlite3.connect(DB_PATH)
+    connection = sqlite3.connect(DB_PATH, timeout=30)
     connection.row_factory = sqlite3.Row
+    connection.execute('PRAGMA busy_timeout = 30000')
+    connection.execute('PRAGMA journal_mode = WAL')
     return connection
 
 
@@ -49,7 +50,8 @@ def init_db():
 
 
 def hash_password(password, salt):
-    return hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000).hex()
+    salt_text = str(salt)
+    return hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt_text.encode('utf-8'), 100000).hex()
 
 
 def verify_password(password, password_hash, salt):
@@ -126,11 +128,18 @@ def register():
 
     salt = os.urandom(16).hex()
     password_hash = hash_password(password, salt)
-    cursor.execute(
-        'INSERT INTO user (username, password_hash, password_salt) VALUES (?, ?, ?)',
-        (username, password_hash, salt)
-    )
-    connection.commit()
+    try:
+        cursor.execute(
+            'INSERT INTO user (username, password_hash, password_salt) VALUES (?, ?, ?)',
+            (username, password_hash, salt)
+        )
+        connection.commit()
+    except sqlite3.IntegrityError:
+        connection.rollback()
+        cursor.close()
+        connection.close()
+        return jsonify({'error': 'User already exists'}), 409
+
     cursor.close()
     connection.close()
     return jsonify({'message': 'User registered successfully'}), 201
