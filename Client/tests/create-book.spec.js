@@ -11,7 +11,7 @@ test.describe('Create Book Page', () => {
     await expect(page.locator('h2:has-text("Add a Book")')).toBeVisible();
     
     // Check form structure
-    await expect(page.locator('form.wt-50')).toBeVisible();
+    await expect(page.locator('form.w-50')).toBeVisible();
     
     // Check all form fields using multiple selector strategies
     const fields = [
@@ -40,7 +40,7 @@ test.describe('Create Book Page', () => {
       { 
         label: 'cost:',
         selectors: [
-          'label:has-text("cost:") + input',
+          'label:has-text("Cost:") + input',
           'input.form-control', // Fallback to class-based selector
           'input[type="text"]' // Last fallback
         ]
@@ -62,7 +62,7 @@ test.describe('Create Book Page', () => {
           // For cost field, we need to find the correct input among multiple
           if (field.label === 'cost:') {
             // Find the input that comes after the cost label
-            const costInput = page.locator('label:has-text("cost:") + input');
+            const costInput = page.locator('label:has-text("Cost:") + input');
             if (await costInput.count() > 0) {
               await expect(costInput).toBeVisible();
               inputFound = true;
@@ -107,7 +107,7 @@ test.describe('Create Book Page', () => {
     await page.locator('input[type="date"]').fill(testBook.date);
     
     // Fill cost - use the input that comes after the cost label
-    const costLabel = page.locator('label:has-text("cost:")');
+    const costLabel = page.locator('label:has-text("Cost:")');
     const costInput = costLabel.locator('xpath=following-sibling::input[1]');
     await costInput.fill(testBook.cost);
     
@@ -213,7 +213,7 @@ test.describe('Create Book Page', () => {
   let costInput;
   
   // Strategy 1: Find input after cost label
-  const costLabel = page.locator('label:has-text("cost:")');
+  const costLabel = page.locator('label:has-text("Cost:")');
   costInput = costLabel.locator('xpath=following-sibling::input[1]');
   
   if (await costInput.count() === 0) {

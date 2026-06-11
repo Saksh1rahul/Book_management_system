@@ -1,9 +1,10 @@
 import hashlib
 import os
-import sqlite3
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
 from functools import wraps
 import jwt
+import pyodbc
 from flask import Flask, g, jsonify, request
 from flask_cors import CORS
 
@@ -12,46 +13,72 @@ CORS(app)
 
 app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', "sakshi's_project")
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'books.db')
+MSSQL_CONNECTION_STRING = os.environ.get(
+    'MSSQL_CONNECTION_STRING',
+    'DRIVER={ODBC Driver 18 for SQL Server};'
+    'SERVER=localhost;'
+    'DATABASE=BookManagement;'
+    'UID=sa;'
+    'PWD=your_password;'
+    'TrustServerCertificate=yes;'
+)
 
 
 def get_db_connection():
-    connection = sqlite3.connect(DB_PATH, timeout=30)
-    connection.row_factory = sqlite3.Row
-    connection.execute('PRAGMA busy_timeout = 30000')
-    connection.execute('PRAGMA journal_mode = WAL')
-    return connection
+    return pyodbc.connect(MSSQL_CONNECTION_STRING)
+
+
+def serialize_value(value):
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    return value
+
+
+def row_to_dict(cursor, row):
+    columns = [column[0] for column in cursor.description]
+    return {column: serialize_value(value) for column, value in zip(columns, row)}
+
+
+def fetchone_dict(cursor):
+    row = cursor.fetchone()
+    if not row:
+        return None
+    return row_to_dict(cursor, row)
 
 
 def init_db():
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS book (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            publisher TEXT NOT NULL,
-            name TEXT NOT NULL,
-            date TEXT NOT NULL,
-            cost REAL NOT NULL,
-            edition TEXT NOT NULL
+        IF OBJECT_ID('dbo.book', 'U') IS NULL
+        CREATE TABLE dbo.book (
+            id INT IDENTITY(1,1) PRIMARY KEY,
+            publisher NVARCHAR(255) NOT NULL,
+            name NVARCHAR(255) NOT NULL,
+            date DATE NOT NULL,
+            cost DECIMAL(10,2) NOT NULL,
+            edition NVARCHAR(100) NOT NULL
         )
     ''')
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS user (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            password_salt TEXT NOT NULL,
-            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        IF OBJECT_ID('dbo.users', 'U') IS NULL
+        CREATE TABLE dbo.users (
+            id INT IDENTITY(1,1) PRIMARY KEY,
+            username NVARCHAR(255) UNIQUE NOT NULL,
+            password_hash NVARCHAR(255) NOT NULL,
+            password_salt NVARCHAR(255) NOT NULL,
+            created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
         )
     ''')
     connection.commit()
+    cursor.close()
     connection.close()
 
 
 def hash_password(password, salt):
-    salt_text = str(salt)
-    return hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt_text.encode('utf-8'), 100000).hex()
+    return hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000).hex()
 
 
 def verify_password(password, password_hash, salt):
@@ -85,15 +112,15 @@ def token_required(func):
 
             connection = get_db_connection()
             cursor = connection.cursor()
-            cursor.execute('SELECT id, username FROM user WHERE username = ?', (username,))
-            user = cursor.fetchone()
+            cursor.execute('SELECT id, username FROM users WHERE username = ?', (username,))
+            user = fetchone_dict(cursor)
             cursor.close()
             connection.close()
 
             if not user:
                 return jsonify({'error': 'User not found'}), 401
 
-            g.user = dict(user)
+            g.user = user
         except jwt.ExpiredSignatureError:
             return jsonify({'error': 'Token expired'}), 401
         except jwt.InvalidTokenError:
@@ -120,7 +147,7 @@ def register():
 
     connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute('SELECT id FROM user WHERE username = ?', (username,))
+    cursor.execute('SELECT id FROM users WHERE username = ?', (username,))
     if cursor.fetchone():
         cursor.close()
         connection.close()
@@ -128,18 +155,11 @@ def register():
 
     salt = os.urandom(16).hex()
     password_hash = hash_password(password, salt)
-    try:
-        cursor.execute(
-            'INSERT INTO user (username, password_hash, password_salt) VALUES (?, ?, ?)',
-            (username, password_hash, salt)
-        )
-        connection.commit()
-    except sqlite3.IntegrityError:
-        connection.rollback()
-        cursor.close()
-        connection.close()
-        return jsonify({'error': 'User already exists'}), 409
-
+    cursor.execute(
+        'INSERT INTO users (username, password_hash, password_salt) VALUES (?, ?, ?)',
+        (username, password_hash, salt)
+    )
+    connection.commit()
     cursor.close()
     connection.close()
     return jsonify({'message': 'User registered successfully'}), 201
@@ -156,8 +176,8 @@ def login():
 
     connection = get_db_connection()
     cursor = connection.cursor()
-    cursor.execute('SELECT password_hash, password_salt FROM user WHERE username = ?', (username,))
-    user = cursor.fetchone()
+    cursor.execute('SELECT password_hash, password_salt FROM users WHERE username = ?', (username,))
+    user = fetchone_dict(cursor)
     cursor.close()
     connection.close()
 
@@ -185,9 +205,10 @@ def get_books():
     cursor = connection.cursor()
     cursor.execute('SELECT * FROM book')
     rows = cursor.fetchall()
+    books = [row_to_dict(cursor, row) for row in rows]
     cursor.close()
     connection.close()
-    return jsonify([dict(row) for row in rows])
+    return jsonify(books)
 
 
 @app.route('/create', methods=['POST'])

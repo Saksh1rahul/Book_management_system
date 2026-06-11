@@ -3,7 +3,7 @@ import { test, expect } from './test-setup';
 test.describe('App Navigation', () => {
   test('should render navigation header', async ({ page }) => {
     await expect(page.locator('text=Book Management System')).toBeVisible();
-    await expect(page.locator('.d-flex.justify-content-center.py-2')).toBeVisible();
+    await expect(page.locator('div.d-flex.justify-content-between.align-items-center.px-4.py-3.shadow-sm')).toBeVisible();
   });
 
   test('should have correct routing setup', async ({ page }) => {

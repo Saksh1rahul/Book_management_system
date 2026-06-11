@@ -18,7 +18,7 @@ const CreateBook = () => {
         axios.post('http://localhost:5000/create', values, { headers: getAuthHeaders() })
             .then(() => navigate('/'))
             .catch(err => {
-                console.error('Failed to create book:', err);
+                console.error('Failed to create book:', err.response?.status, err.response?.data, err.message);
                 if (err.response?.status === 401) {
                     navigate('/login');
                 } else {

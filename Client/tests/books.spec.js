@@ -11,11 +11,11 @@ test.describe('Books List Page', () => {
     
     // Check create button
     const createButton = page.locator('a.btn.btn-success');
-    await expect(createButton).toHaveText('Create Link');
+    await expect(createButton).toHaveText('Create Book');
     await expect(createButton).toHaveAttribute('href', '/create');
     
     // Check table headers
-    const headers = ['Publisher', 'Book', 'Date', 'cost', 'Actions'];
+    const headers = ['Publisher', 'Book', 'Date', 'Cost', 'Actions'];
     for (const header of headers) {
       await expect(page.locator(`th:has-text("${header}")`)).toBeVisible();
     }
