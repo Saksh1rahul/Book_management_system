@@ -16,11 +16,12 @@ app.config['SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', "sakshi's_project")
 MSSQL_CONNECTION_STRING = os.environ.get(
     'MSSQL_CONNECTION_STRING',
     'DRIVER={ODBC Driver 18 for SQL Server};'
-    'SERVER=localhost;'
+    'SERVER=sqlserver,1433;'
     'DATABASE=BookManagement;'
     'UID=sa;'
-    'PWD=your_password;'
+    'PWD={Sakshi@mssql};'
     'TrustServerCertificate=yes;'
+    'Encrypt=no;'
 )
 
 
@@ -321,9 +322,6 @@ def delete_book(id):
     connection.close()
     return jsonify({'message': 'deleted successfully'})
 
-
-init_db()
-
-
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+if __name__ == "__main__":
+    init_db()
+    app.run(debug=True, host="0.0.0.0", port=5000)

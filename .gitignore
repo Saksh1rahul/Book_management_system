@@ -35,7 +35,6 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-dist/
 dist-ssr/
 *.local
 
@@ -84,3 +83,15 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+# Docker
+docker-compose.override.yml
+*.pid
+*.sock
+# Secrets
+*.env*
+config.json
+secret.json
+*.mdf
+*.ldf
+instance/
+*.pyc

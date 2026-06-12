@@ -1,214 +1,215 @@
-# Flask CRUD App with SQLite & React
+# 📚 Book Management System (Full-Stack)
 
-## Description
+> **Flask API + React Frontend** using **Microsoft SQL Server (MSSQL)**.
+> A complete system to manage digital library records with User Authentication (JWT).
 
-This is a simple Flask CRUD application that manages a list of books stored in a **SQLite** database. The app allows users to create, read, update, and delete books through a React frontend.
+---
 
-## Project Structure
+## 📋 Table of Contents
 
+1. [⚡ Quick Start (5 Minutes)](#-quick-start-5-minutes)
+2. [✅ Prerequisites](#-prerequisites)
+3. [🛠️ Step-by-Step Backend Setup](#️-step-by-step-backend-setup)
+4. [💻 Step-by-Step Frontend Setup](#-step-by-step-frontend-setup)
+5. [🚀 Running the Application](#-running-the-app)
+6. [🔍 API Documentation](#-api-endpoints)
+7. [🧪 Testing](#-testing)
+8. [❓ Troubleshooting](#-troubleshooting)
+
+---
+
+## ⚡ Quick Start (5 Minutes)
+
+### 1. Start SQL Server (Docker)
+```bash
+docker run -d --name mssql -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Sakshi@mssql" -p 1433:1433 mcr.microsoft.com/mssql/server:2022-latest
 ```
-simple_book_management/
-├── Client/                         # React frontend
-│   ├── public/
-│   ├── src/
-│   ├── package.json
-│   └── README.md
-├── Server/                         # Flask + SQLite backend
-│   ├── app.py
-│   ├── books.db                    # SQLite database file (auto-created)
-│   ├── requirements.txt
-│   ├── venv/
-│   └── tests/
-└── README.md
+
+### 2. Start Backend
+```bash
+cd Server
+python3 -m venv venv
+source venv/bin/activate  # Windows: .\venv\Scripts\activate
+pip install -r requirements.txt
+python3 app.py
 ```
 
-## Prerequisites
+### 3. Start Frontend
+```bash
+cd Client
+npm install
+npm run dev
+```
 
-Ensure the following are installed on your system:
+---
 
-- **Python 3.8+**
-- **Node.js 16+** (for React frontend)
-- **pip** (Python package manager)
-- **npm** (Node package manager)
+## ✅ Prerequisites
 
-> No external database installation required — SQLite is built into Python.
+Before starting, ensure you have the following installed:
 
-## Backend Setup (Flask + SQLite)
+| Tool | Required Version | Purpose |
+|------|------------------|---------|
+| **Python** | 3.10+ | Backend API |
+| **Node.js** | 18+ or 21+ | Frontend UI |
+| **Docker** | Latest | Running SQL Server |
+| **ODBC Driver**| 17 or 18 | Database Connection |
 
-1. **Navigate to the server directory:**
+---
 
-   ```bash
-   cd Server
-   ```
+## 🛠️ Step-by-Step Backend Setup
 
-2. **Create and activate a virtual environment:**
+### STEP 1: Run MSSQL Database
+The easiest way to run SQL Server is via Docker. Open your terminal and run:
 
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate        # On Windows: venv\Scripts\activate
-   ```
+```bash
+docker run -d \
+  --name mssql \
+  -e "ACCEPT_EULA=Y" \
+  -e "MSSQL_SA_PASSWORD=Sakshi@mssql" \
+  -p 1433:1433 \
+  mcr.microsoft.com/mssql/server:2022-latest
+```
+*Wait about 15 seconds for the database to initialize.*
 
-3. **Install Python dependencies:**
+### STEP 2: Create the Database
+The Flask app looks for a database named `BookManagement`. You need to create it once:
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+**Linux/Mac:**
+```bash
+docker exec -it mssql /opt/mssql-tools/bin/sqlcmd \
+   -S localhost -U sa -P Sakshi@mssql \
+   -Q "CREATE DATABASE BookManagement"
+```
 
-4. **Run the Flask application:**
+**Windows (PowerShell):**
+```powershell
+docker exec -it mssql /opt/mssql-tools/bin/sqlcmd `
+   -S localhost -U sa -P Sakshi@mssql `
+   -Q "CREATE DATABASE BookManagement"
+```
 
-   ```bash
-   python3 app.py
-   # Or using the venv directly:
-   venv/bin/python3 app.py
-   ```
+### STEP 3: Python Environment
+Navigate to the `Server` folder and set up your virtual environment:
 
-   The backend will start on **http://localhost:5000**
+```bash
+cd Server
+python3 -m venv venv
 
-   The `books.db` SQLite file is created automatically on first run — no manual database setup needed.
+# Activate Environment
+source venv/bin/activate # Windows: .\venv\Scripts\activate
 
-## Frontend Setup (React)
+# Install Dependencies
+pip install -r requirements.txt
+```
 
-1. **Navigate to the client directory:**
+### STEP 4: Configuration (.env)
+Create a `.env` file inside the `Server` folder to store your secrets:
 
+```env
+JWT_SECRET_KEY=your_random_secret_string
+MSSQL_CONNECTION_STRING=DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=BookManagement;UID=sa;PWD=Sakshi@mssql;TrustServerCertificate=yes;Encrypt=no;
+```
+
+---
+
+## 💻 Step-by-Step Frontend Setup
+
+1. **Navigate to the Client folder:**
    ```bash
    cd Client
    ```
 
-2. **Install Node.js dependencies:**
-
+2. **Install Node modules:**
    ```bash
    npm install
    ```
 
-3. **Start the React development server:**
+3. **Configure API URL:**
+   Ensure your frontend points to `http://localhost:5000` (the default Flask port).
 
-   ```bash
-   npm run dev
-   ```
+---
 
-   The frontend will start on **http://localhost:5173**
+## 🚀 Running the App
 
-## Usage
+### 1. Start the Flask Server
+```bash
+cd Server
+source venv/bin/activate
+python3 app.py
+```
+*The server will run at `http://localhost:5000`. It will automatically create the necessary tables (`book` and `users`) on its first run.*
 
-1. Start the backend server (Flask on port **5000**)
-2. Start the frontend client (React on port **5173**)
-3. Open your browser and navigate to **http://localhost:5173**
+### 2. Start the React UI
+```bash
+cd Client
+npm run dev
+```
+*The UI will run at `http://localhost:5173`.*
 
-You should see the book management interface where you can:
+---
 
-- View all books
-- Add new books
-- Edit existing books
-- Delete books
+## 🔍 API Endpoints
 
-## API Endpoints
-
+### Authentication
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/` | Retrieve all books |
-| `POST` | `/create` | Create a new book |
-| `PUT` | `/update/<id>` | Update a book by ID |
-| `DELETE` | `/delete/<id>` | Delete a book by ID |
+| `POST` | `/register` | Create a new user account |
+| `POST` | `/login` | Login to receive a JWT Token |
+| `GET` | `/me` | Get profile of logged-in user |
 
-### Example Requests
+### Book Management (Requires JWT Token)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Fetch all books |
+| `POST` | `/create` | Add a new book |
+| `PUT` | `/update/<id>` | Update an existing book |
+| `DELETE` | `/delete/<id>` | Remove a book |
 
-#### Get All Books
-```
-GET http://localhost:5001/
-```
+---
 
-#### Create a Book
-```
-POST http://localhost:5000/create
-Content-Type: application/json
+## 🧪 Testing
 
-{
-  "publisher": "O'Reilly",
-  "name": "Learning Flask",
-  "date": "2024-10-11",
-  "Cost": 399.99
-}
-```
-
-#### Update a Book
-```
-PUT http://localhost:5000/update/1
-Content-Type: application/json
-
-{
-  "publisher": "Updated Publisher",
-  "name": "Updated Book Name",
-  "date": "2024-12-01",
-  "Cost": 499.99
-}
-```
-
-#### Delete a Book
-```
-DELETE http://localhost:5000/delete/1
-```
-
-## Technologies Used
-
-### Backend
-- **Flask** — Web framework
-- **Flask-CORS** — Cross-Origin Resource Sharing
-- **SQLite** — Lightweight file-based database (built into Python)
-
-### Frontend
-- **React** — UI framework
-- **Axios** — HTTP client for API calls
-- **Bootstrap** — Styling
-
-## Testing
-
-### Pytest (Unit Tests)
-
+### 1. Backend Unit Tests (Pytest)
 ```bash
-bash Server/run-pytest.sh
+cd Server
+bash run-pytest.sh
 ```
 
-### Newman (API Tests)
-
+### 2. API Integration Tests (Newman)
 ```bash
 cd Server/tests/postman_newman
 ./run-newman-tests.sh
 ```
 
-### Playwright (E2E Tests)
-
+### 3. End-to-End Tests (Playwright)
 ```bash
 cd Client
 npx playwright test
 ```
 
-Test reports are located in:
-- `Server/tests/pytest/pytest-report.json`
-- `Server/tests/postman_newman/newman-report.html`
-- `Client/playwright-report/index.html`
+---
 
-## Troubleshooting
+## ❓ Troubleshooting
 
-### Backend won't start — module not found
-Make sure the virtual environment is activated before running:
-```bash
-source Server/venv/bin/activate
-python3 Server/app.py
-```
+### "Login failed for user 'sa'"
+* **Cause:** Incorrect password or Docker container not ready.
+* **Fix:** Ensure the `MSSQL_SA_PASSWORD` in your Docker command matches the `PWD` in your connection string.
 
-### Frontend can't connect to backend
-- Verify the Flask server is running on port **5000**
-- Check that CORS is enabled (it is by default via `flask-cors`)
+### "ModuleNotFoundError: No module named 'pyodbc'"
+* **Cause:** Virtual environment not activated.
+* **Fix:** Run `source venv/bin/activate` before starting the app.
 
-### Virtual environment issues
-```bash
-# Recreate the venv if needed
-rm -rf Server/venv
-python3 -m venv Server/venv
-source Server/venv/bin/activate
-pip install -r Server/requirements.txt
-```
+### "ODBC Driver Not Found"
+* **Cause:** The SQL Server driver is not installed on your host OS.
+* **Fix:**
+    * **Ubuntu:** `sudo apt-get install msodbcsql18`
+    * **Windows:** Download "Microsoft ODBC Driver for SQL Server" from the official Microsoft site.
 
-## License
+### "CORS Error" in Browser
+* **Cause:** Frontend trying to hit a different port/origin.
+* **Fix:** The backend is configured with `flask-cors`. Ensure you are hitting the correct URL: `http://localhost:5000`.
 
-This project is for educational purposes.
+---
+
+*This project is for educational purposes.*
+### for docker compose 
